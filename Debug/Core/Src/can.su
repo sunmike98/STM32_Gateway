@@ -1,9 +1,0 @@
-can.c:36:6:MX_CAN1_Init	8	static
-can.c:68:6:HAL_CAN_MspInit	48	static
-can.c:101:6:HAL_CAN_MspDeInit	16	static
-can.c:127:6:CAN_Start	8	static
-can.c:134:6:CAN_ActivateNotification	8	static
-can.c:141:6:CAN_Filter_Config	8	static
-can.c:166:6:CAN_NMEA2000_Tx_Header_Config	24	static
-can.c:183:10:CAN_Transmit_Msg	24	static
-can.c:193:10:CAN_Receive_Msg	24	static

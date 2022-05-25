@@ -21,12 +21,16 @@
 #include "can.h"
 
 /* USER CODE BEGIN 0 */
-#define BLDC_CONTROLLER_ID 	0xCF11E05
+#define BLDC_CONTROLLER_MSG_1_ID 	0xCF11E05
+#define BLDC_CONTROLLER_MSG_2_ID 	0xCF11E04
 #define MY_EXT_ID 			23
 
 CAN_FilterTypeDef CAN_Filter_Cfg;
 CAN_TxHeaderTypeDef	TxHeader;
 CAN_RxHeaderTypeDef	RxHeader;
+
+BLDC_Motor_Msg_t	BLDC_Motor_Msg_1 = {BLDC_CONTROLLER_MSG_1_ID};
+BLDC_Motor_Msg_t	BLDC_Motor_Msg_2 = {BLDC_CONTROLLER_MSG_2_ID};
 
 /* USER CODE END 0 */
 
@@ -140,14 +144,11 @@ void CAN_ActivateNotification(void)
 }
 void CAN_Filter_Config(void)
 {
-
-
-
 	CAN_Filter_Cfg.FilterActivation = CAN_FILTER_ENABLE;
-	CAN_Filter_Cfg.FilterIdHigh = (BLDC_CONTROLLER_ID >> 13) & 0xFFFF;
-	CAN_Filter_Cfg.FilterIdLow = (BLDC_CONTROLLER_ID << 3) & 0xFFF8;
-	CAN_Filter_Cfg.FilterMaskIdHigh = (BLDC_CONTROLLER_ID >> 13) & 0xFFFF;
-	CAN_Filter_Cfg.FilterMaskIdLow = (BLDC_CONTROLLER_ID << 3) & 0xFFF8;
+	CAN_Filter_Cfg.FilterIdHigh = (BLDC_CONTROLLER_MSG_1_ID >> 13) & 0xFFFF;
+	CAN_Filter_Cfg.FilterIdLow = (BLDC_CONTROLLER_MSG_1_ID << 3) & 0xFFF8;
+	CAN_Filter_Cfg.FilterMaskIdHigh = (BLDC_CONTROLLER_MSG_1_ID >> 13) & 0xFFFF;
+	CAN_Filter_Cfg.FilterMaskIdLow = (BLDC_CONTROLLER_MSG_1_ID << 3) & 0xFFF8;
 	/*CAN_Filter_Cfg.FilterIdHigh = (BLDC_CONTROLLER_ID & 0xFF00) >> 16;
 	CAN_Filter_Cfg.FilterIdLow = (BLDC_CONTROLLER_ID & 0x00FF) << 3;
 	CAN_Filter_Cfg.FilterMaskIdHigh = (BLDC_CONTROLLER_ID & 0xFF00) >> 16;
@@ -163,23 +164,7 @@ void CAN_Filter_Config(void)
 		Error_Handler();
 	}
 }
-void CAN_NMEA2000_Tx_Header_Config(uint32_t NMEA2000_Msg_Id)
-{
-	CAN_NMEA2000_Header_ID_t CAN_Tx_Header_ExtId = {
-			.Priority = 6,
-			/*.Reserved = 0,*/
-			.MsgId = 0,
-			.MyId = MY_EXT_ID
-	};
-	CAN_Tx_Header_ExtId.MsgId = NMEA2000_Msg_Id;
 
-	TxHeader.DLC = 8;
-	TxHeader.ExtId = *(uint32_t*)&CAN_Tx_Header_ExtId;//MY_EXT_ID;
-	TxHeader.IDE = CAN_ID_EXT;
-	TxHeader.RTR = CAN_RTR_DATA;
-	TxHeader.StdId = 0;
-	TxHeader.TransmitGlobalTime = DISABLE;
-}
 status_t CAN_Transmit_Msg(uint8_t* TxData)
 {
 	status_t status = OK;
@@ -199,6 +184,22 @@ status_t CAN_Receive_Msg(uint8_t* RxData)
 	}
 	return status;
 }
+void BLDC_Set_Received_Values(uint8_t CAN_Rx_Data[])
+{
+	if(RxHeader.ExtId == BLDC_Motor_Msg_1.MsgId)
+	{
+		BLDC_Motor_Msg_1.BLDC_Motor_Msg_1_Data.RotorSpeed = 256 * CAN_Rx_Data[1] + CAN_Rx_Data[0];
+		BLDC_Motor_Msg_1.BLDC_Motor_Msg_1_Data.MotorCurrent = (256 * CAN_Rx_Data[3] + CAN_Rx_Data[2])/10;
+		BLDC_Motor_Msg_1.BLDC_Motor_Msg_1_Data.BatteryVoltage = (256 * CAN_Rx_Data[5] + CAN_Rx_Data[4])/10;
+	}
+	else if(RxHeader.ExtId == BLDC_Motor_Msg_2.MsgId)
+	{
+		BLDC_Motor_Msg_2.BLDC_Motor_Msg_2_Data.ThrottleSignal = CAN_Rx_Data[0] - 125;	// throttle_offset
+		BLDC_Motor_Msg_2.BLDC_Motor_Msg_2_Data.ControllerTemp = CAN_Rx_Data[1] - 40;	// controller_temperature_offset
+		BLDC_Motor_Msg_2.BLDC_Motor_Msg_2_Data.MotorTemp = CAN_Rx_Data[2] - 30;			// motor_temperature_offset
+	}
+}
+
 /* USER CODE END 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

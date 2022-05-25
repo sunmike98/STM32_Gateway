@@ -22,6 +22,7 @@
 #include "can.h"
 #include "usart.h"
 #include "gpio.h"
+#include "nmea2000.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -45,16 +46,18 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-extern CAN_TxHeaderTypeDef	TxHeader;
-extern CAN_RxHeaderTypeDef	RxHeader;
+
+extern BLDC_Motor_Msg_t	BLDC_Motor_Msg_1;
+extern BLDC_Motor_Msg_t	BLDC_Motor_Msg_2;
+extern NMEA2000_Msg_t NMEA_2000_Msg_ZIOM;
+extern NMEA2000_Msg_t NMEA_2000_Msg_EPRU;
+extern NMEA2000_Msg_t NMEA_2000_Msg_EPD;
+extern NMEA2000_Msg_t NMEA_2000_Msg_BatStatus;
 
 uint8_t TxData[8];
 uint8_t RxData[8];
 
-float rpm;
-float current;
-float voltage;
-
+CAN_RxHeaderTypeDef RxHeader;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,19 +105,38 @@ int main(void)
   CAN_Start();
   CAN_ActivateNotification();
   CAN_Filter_Config();
-  //CAN_Tx_Header_Config();
-  CAN_NMEA2000_Tx_Header_Config(127488);
-  /* USER CODE END 2 */
 
+  /* USER CODE END 2 */
+  /*RxHeader.ExtId = 0xCF11E05;
+  RxData[0] = 1;
+  RxData[1] = 2;
+  RxData[2] = 3;
+  RxData[3] = 4;
+  RxData[4] = 5;
+  RxData[5] = 6;
+  RxData[6] = 7;
+  RxData[7] = 8;
+
+  //BLDC_Set_Received_Values(RxData);
+  BLDC_Motor_Msg_1.BLDC_Motor_Msg_1_Data.RotorSpeed = 1000;
+  NMEA2000_Transmit_Msg1(&NMEA_2000_Msg_EPRU);
+  //RxHeader.ExtId = 0xCF11E04;
+  //BLDC_Set_Received_Values(RxData);
+  BLDC_Motor_Msg_1.BLDC_Motor_Msg_1_Data.BatteryVoltage = 53;
+  NMEA2000_Transmit_Msg1(&NMEA_2000_Msg_BatStatus);
+  RxHeader.ExtId = 0xCF11E05;
+  BLDC_Set_Received_Values(RxData);
+  NMEA2000_Transmit_Msg1(&NMEA_2000_Msg_EPRU);
+  RxHeader.ExtId = 0xCF11E04;
+  BLDC_Set_Received_Values(RxData);
+  NMEA2000_Transmit_Msg1(&NMEA_2000_Msg_BatStatus);
+  */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
-	  /*TxData[0] = 1;
-	  TxData[1] = 2;
-	  TxData[2] = 3;
-	  CAN_Transmit_Msg(TxData);*/
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -161,24 +183,28 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-/**/void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
 	CAN_Receive_Msg(RxData);
-	if(RxHeader.ExtId == 0xCF11E05)
-	{
-		rpm = 256 * RxData[1] + RxData[0];
-		current = (256 * RxData[3] + RxData[2])/10;
-		voltage = (256 * RxData[5] + RxData[4])/10;
+	BLDC_Set_Received_Values(RxData);
 
-		TxData[0] = 1;
+	/*TxData[0] = 1;
 		TxData[1] = 1;
-		TxData[2] = (110 * (rpm / 7000));
+		TxData[2] = (110 * (BLDC_Motor_Msg_1.BLDC_Motor_Msg_1_Data.RotorSpeed / 7000));
 		TxData[3] = 1;
-		TxData[4] = 1;
-		CAN_Transmit_Msg(TxData);
-	}
+		TxData[4] = 1;*/
+
+		NMEA2000_Transmit_Msg(&NMEA_2000_Msg_EPRU);
+		NMEA2000_Transmit_Msg(&NMEA_2000_Msg_BatStatus);
+		NMEA2000_Transmit_Msg(&NMEA_2000_Msg_EPD);
+
+		//CAN_Transmit_Msg(TxData);
+
 	HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
 }
+
+
+
 /* USER CODE END 4 */
 
 /**
