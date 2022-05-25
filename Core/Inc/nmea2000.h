@@ -10,19 +10,7 @@
 #define INC_NMEA2000_H_
 
 #include <stdint.h>
-
-/*typedef enum
-{
-	OK,
-	Error
-}status_t;*/
-
-typedef struct
-{
-	uint8_t d;
-	uint8_t x;
-
-}NMEA2000_Msg_ZIOM_Data_t;
+#include <can.h>
 
 /* Message Battery_Status */
 typedef struct
@@ -66,7 +54,6 @@ typedef struct
 typedef union
 {
 	NMEA2000_Msg_EPRU_Data_t		NMEA2000_Msg_EPRU_Data;
-	NMEA2000_Msg_ZIOM_Data_t		NMEA2000_Msg_ZIOM_Data;
 	NMEA2000_Msg_BatStatus_Data_t	NMEA2000_Msg_BatStatus_Data;
 	NMEA2000_Msg_EPD_Data_t			NMEA2000_Msg_EPD_Data;
 
@@ -81,9 +68,8 @@ typedef struct
 
 }NMEA2000_Msg_t;
 
-
 void CAN_NMEA2000_Tx_Header_Config(uint32_t NMEA2000_Msg_Id, uint8_t NMEA2000_Msg_DLC);
-void NMEA2000_Transmit_Msg(NMEA2000_Msg_t* NMEA200_MsgType);
+status_t NMEA2000_Transmit_Msg(NMEA2000_Msg_t* NMEA200_MsgType);
 void NMEA_Set_Values(NMEA2000_Msg_t* NMEA2000_MsgType);
 
 #endif /* INC_NMEA2000_H_ */

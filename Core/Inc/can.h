@@ -40,7 +40,6 @@ typedef enum
 	Error
 }status_t;
 
-//#pragma pack(push, 1)
 typedef struct
 {
 	uint8_t 	MyId : 8;
@@ -50,7 +49,6 @@ typedef struct
 	uint8_t				 : 3;
 
 }CAN_NMEA2000_Header_ID_t;
-//#pragma pack(pop)
 
 typedef struct
 {
@@ -59,7 +57,6 @@ typedef struct
 	uint8_t 	BatteryVoltage;
 
 }BLDC_Motor_Msg_1_Data_t;
-
 
 typedef struct
 {
@@ -87,7 +84,6 @@ void MX_CAN1_Init(void);
 void CAN_Start(void);
 void CAN_ActivateNotification(void);
 void CAN_Filter_Config(void);
-//void CAN_NMEA2000_Tx_Header_Config(uint32_t NMEA2000_Msg_Id);
 status_t CAN_Transmit_Msg(uint8_t TxData[]);
 status_t CAN_Receive_Msg(uint8_t RxData[]);
 void BLDC_Set_Received_Values(uint8_t CAN_Rx_Data[]);
